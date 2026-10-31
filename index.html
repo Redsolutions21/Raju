@@ -444,7 +444,7 @@ async function refresh(){
   try{const r=await fetch('https://solutionsbyred.app.n8n.cloud/webhook/raju-data?key='+encodeURIComponent(key),{cache:'no-store'});if(!r.ok)throw new Error(r.status);const d=await r.json();
     if(d.error){try{localStorage.removeItem('raju_key')}catch(e){}chip('warn','Wrong key, tap Check for new run');return}
     load(d)}
-  catch(e){chip('warn','Could not refresh');$('feedNote').textContent='● OFFLINE';$('feedNote').style.color='var(--warn)'}
+  catch(e){chip('warn','Could not refresh ('+String(e&&e.message||e).slice(0,30)+')');$('feedNote').textContent='● OFFLINE';$('feedNote').style.color='var(--warn)'}
 }
 $('refreshBtn').onclick=refresh;
 load(RAJU_DATA);refresh();
@@ -492,7 +492,7 @@ const msgOf = e => String((e && (e.message || e.reason)) || e || 'unknown').slic
 async function toggle(){
   if(busy) return;
   if(conv){
-    busy = true; ui('connecting','Ending call…');
+    busy = true; userEnded = true; ui('connecting','Ending call…');
     try{ await conv.endSession(); }catch(e){}
     conv = null; busy = false; ui('idle','Call ended. Tap to talk again'); return;
   }
@@ -501,19 +501,39 @@ async function toggle(){
     const m = await navigator.mediaDevices.getUserMedia({audio:true});
     m.getTracks().forEach(t => t.stop());
   }catch(e){ busy = false; ui('error','Microphone blocked. Allow it for this site, then tap again'); return; }
-  ui('connecting','Connecting to RAJU…');
+  await start('webrtc', false);
+  busy = false;
+}
+let userEnded = false, t0 = 0;
+function why(d){
+  if(!d) return 'no reason given';
+  if(d.reason === 'user') return 'ended';
+  const parts = [d.reason, d.message, d.closeCode, d.closeReason, d.context && (d.context.reason || d.context.type)].filter(x => x !== undefined && x !== null && x !== '');
+  return parts.map(x => typeof x === 'object' ? JSON.stringify(x) : String(x)).join(' · ').slice(0,110);
+}
+async function start(type, retried){
+  userEnded = false; t0 = Date.now();
+  ui('connecting', retried ? 'Retrying another way…' : 'Connecting to RAJU…');
   try{
     const { Conversation } = await lib();
     conv = await Conversation.startSession({
       agentId: AGENT,
-      connectionType: 'webrtc',
+      connectionType: type,
       onConnect: () => ui('listening','Listening. Just speak. Tap to end'),
-      onDisconnect: () => { conv = null; if(state !== 'error') ui('idle','Call ended. Tap to talk again'); },
+      onDisconnect: d => {
+        conv = null; if(userEnded) return;
+        const quick = Date.now() - t0 < 8000;
+        if(quick && !retried && type === 'webrtc'){ start('websocket', true); return; }
+        ui('error','Call dropped: ' + why(d) + (retried ? ' (both ways)' : ''));
+      },
       onError: e => ui('error','RAJU error: ' + msgOf(e)),
       onModeChange: ({mode}) => mode === 'speaking' ? ui('speaking','RAJU is speaking. Tap to end') : ui('listening','Listening. Just speak. Tap to end')
     });
-  }catch(e){ conv = null; ui('error','Could not connect: ' + msgOf(e)); }
-  busy = false;
+  }catch(e){
+    conv = null;
+    if(!retried && type === 'webrtc'){ return start('websocket', true); }
+    ui('error','Could not connect: ' + msgOf(e));
+  }
 }
 $('micBtn').addEventListener('click', toggle);
 $('talkBtn').addEventListener('click', toggle);
