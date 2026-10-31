@@ -156,6 +156,9 @@ nav{width:210px;flex:none;border:1px solid var(--line);border-radius:6px;backgro
 .stage.narrow .duo{grid-template-columns:1fr}
 .stage.narrow .bottom{height:auto;flex-wrap:wrap;padding:10px;justify-content:center}
 .stage.narrow .dash,.stage.narrow .chipsb{display:none}
+.bottom>.chipsb,.bottom>#updTxt{flex:0 0 400px}
+.bottom>#updTxt{text-align:right}
+.stage.narrow .bottom>#updTxt{flex:0 0 auto;text-align:center}
 .stage.narrow .console,.stage.narrow .detail{position:fixed;left:8px;right:8px;width:auto;transform:none;top:auto;bottom:8px;max-height:80vh}
 .mic,.talk{cursor:pointer;font:inherit;-webkit-tap-highlight-color:transparent}
 body:not([data-call]) .wave i,body[data-call="idle"] .wave i,body[data-call="error"] .wave i{animation-play-state:paused}
