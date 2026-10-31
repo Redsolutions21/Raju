@@ -451,7 +451,7 @@ async function refresh(){
 }
 $('refreshBtn').onclick=refresh;
 load(RAJU_DATA);refresh();
-setInterval(refresh,15*60*1000);
+setInterval(()=>{if(document.visibilityState==='visible')refresh()},60*60*1000);
 /* run detail */
 let detailText='';
 function openRun(r){
