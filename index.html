@@ -528,7 +528,7 @@ let tv=false; try{tv=localStorage.getItem('raju_tv')==='1'}catch(e){}
 let unmuteT=null, wl=null;
 function setTV(v){ tv=v; try{localStorage.setItem('raju_tv', v?'1':'0')}catch(e){}
   const b=document.getElementById('tvBtn'); b.classList.toggle('on', v); b.setAttribute('aria-pressed', v);
-  document.body.classList.toggle('tv', v); if(window.fit) window.fit();
+  document.body.classList.toggle('tv', v); if(window.fit) window.fit(); wake(v || !!conv);
   if(conv && !v){ clearTimeout(unmuteT); try{conv.setMicMuted(false)}catch(e){} } }
 document.getElementById('tvBtn').addEventListener('click', ()=>setTV(!tv));
 setTV(tv);
@@ -542,7 +542,7 @@ async function wake(on){
   try{ if(on){ if('wakeLock' in navigator && !wl){ wl=await navigator.wakeLock.request('screen'); wl.addEventListener('release',()=>{wl=null}); } }
        else if(wl){ await wl.release(); wl=null; } }catch(e){}
 }
-document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible' && conv) wake(true); });
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible' && (conv || tv)) wake(true); });
 const LABEL = {idle:'Ready', connecting:'Connecting', listening:'Listening', speaking:'Speaking', error:'Problem'};
 function ui(st, msg){
   state = st; document.body.dataset.call = st;
@@ -564,7 +564,7 @@ async function toggle(){
   if(conv){
     busy = true; userEnded = true; ui('connecting','Ending call…');
     try{ await conv.endSession(); }catch(e){}
-    conv = null; wake(false); busy = false; ui('idle','Call ended. Tap to talk again'); return;
+    conv = null; wake(tv); busy = false; ui('idle','Call ended. Tap to talk again'); return;
   }
   busy = true; unlockAudio(); ui('connecting','Allow the microphone…');
   try{
@@ -591,7 +591,7 @@ async function start(type, retried){
       connectionType: type,
       onConnect: () => { ui('listening','Listening. Just speak. Tap to end'); wake(true); },
       onDisconnect: d => {
-        conv = null; wake(false); if(userEnded) return;
+        conv = null; wake(tv); if(userEnded) return;
         const quick = Date.now() - t0 < 8000;
         if(quick && !retried && type === 'webrtc'){ start('websocket', true); return; }
         ui('error','Call dropped: ' + why(d) + (retried ? ' (both ways)' : ''));
