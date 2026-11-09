@@ -94,6 +94,18 @@ nav{width:210px;flex:none;border:1px solid var(--line);border-radius:6px;backgro
 .corestate{position:absolute;left:12px;top:10px;font-family:var(--display);font-size:10px;letter-spacing:.14em;color:var(--ink-soft)}
 .agents{grid-column:span 2}
 .agrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;flex:1}
+.agrid.all{grid-template-columns:repeat(5,minmax(0,1fr));gap:3px 4px;align-content:start}
+.mini{display:flex;align-items:center;gap:5px;border:1px solid var(--line-soft);border-left:3px solid var(--c);border-radius:3px;background:var(--well);padding:2px 5px;min-width:0;color:var(--ink);font-size:10.5px;line-height:1.15}
+.mini b{font-family:var(--display);font-size:10px;color:var(--c);flex:none;width:16px;text-align:right}
+.mini span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.atabs{display:inline-flex;gap:4px;margin-left:8px}
+.atabs button{font:inherit;font-size:10px;letter-spacing:.08em;padding:1px 8px;border-radius:9px;border:1px solid var(--line);background:transparent;color:var(--mute);cursor:pointer}
+.atabs button.on{color:var(--glow);border-color:var(--glow)}
+.legend{display:inline-flex;gap:8px;margin-left:10px;font-size:10px;color:var(--mute)}
+.legend i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:3px;vertical-align:-1px}
+.vsw{display:flex;gap:4px;align-self:stretch}
+.vsw button{flex:1;font:inherit;font-size:12px;padding:4px 0;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--mute);cursor:pointer}
+.vsw button.on{color:#EAF6FF;border-color:var(--glow);background:#0A2A4E;box-shadow:0 0 10px var(--glow)}
 .agent{border:1px solid var(--line-soft);border-radius:4px;background:var(--well);padding:6px 9px;display:flex;align-items:center;gap:9px;min-width:0;color:var(--ink);text-align:left}
 .agent .ico{border-radius:6px;width:32px;height:32px}
 .bars{display:flex;align-items:center;gap:2px;height:22px}
@@ -183,6 +195,7 @@ body[data-call="error"] #askHint,body[data-call="error"] #talkSub{color:var(--wa
     <p class="h" style="align-self:stretch">ASK STATUS <small id="askState">Ready</small></p>
     <div class="wave" id="wave"></div>
     <p class="small" style="color:var(--ink-soft)">RAJU voice</p>
+    <div class="vsw" role="group" aria-label="RAJU voice"><button type="button" id="vEN">EN</button><button type="button" id="vKW">كويتي</button></div>
     <button class="mic" id="micBtn" type="button" aria-label="Talk to RAJU"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EAF6FF" stroke-width="2" stroke-linecap="round"><path d="M12 3a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3zM5 11a7 7 0 0 0 14 0M12 18v3"/></svg></span></button>
     <p class="small" id="askHint" style="color:var(--ink-soft);text-align:center">Tap the mic to talk to RAJU</p>
     <button class="ghost" id="fsBtn" style="align-self:stretch;border-radius:14px">Full screen</button>
@@ -211,7 +224,7 @@ body[data-call="error"] #askHint,body[data-call="error"] #talkSub{color:var(--wa
       <div id="orbitLayer" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"></div>
       <div class="sphere"></div>
       <div class="globe"><div class="rot" id="globe"></div></div>
-      <div class="coretext"><b>RAJU</b><span>AI CORE</span><small id="coreVer">8 AGENTS</small></div>
+      <div class="coretext"><b>RAJU</b><span>AI CORE</span><small id="coreVer">26 AGENTS</small></div>
       <p class="corestate" id="coreState">AGENT SYSTEM</p>
     </section>
 
@@ -221,7 +234,7 @@ body[data-call="error"] #askHint,body[data-call="error"] #talkSub{color:var(--wa
     </section>
 
     <section class="panel agents" aria-label="Active agents">
-      <p class="h">ACTIVE AGENTS <small id="agentNote">Latest run</small></p>
+      <p class="h">AGENTS <span class="atabs"><button id="tabCore" class="on" type="button">CORE · LIVE</button><button id="tabAll" type="button">ALL 26 + 2</button></span><span class="legend" id="agLegend" hidden></span><small id="agentNote">Latest run</small></p>
       <div class="agrid" id="agents"></div>
     </section>
 
@@ -305,7 +318,7 @@ function fit(){
 window.addEventListener('resize',fit);fit();
 
 /* ---------- static decor ---------- */
-const navItems=[['Command Center',I.grid,''],['AI Core',I.core,''],['Agents',I.bot,'8'],['Runs',I.play,'runs'],['Calendar',I.cal,''],['Run Log',I.db,''],['Requests',I.chat,''],['Knowledge Base',I.book,''],['Tools & Skills',I.tool,'3'],['Workflows',I.flow,'']];
+const navItems=[['Command Center',I.grid,''],['AI Core',I.core,''],['Agents',I.bot,'26'],['Runs',I.play,'runs'],['Calendar',I.cal,''],['Run Log',I.db,''],['Requests',I.chat,''],['Knowledge Base',I.book,''],['Tools & Skills',I.tool,'4'],['Workflows',I.flow,'']];
 $('navlist').innerHTML=navItems.map((n,i)=>`<a href="#" class="${i===0?'on':''}">${svg(n[1])}<span>${esc(n[0])}</span>${n[2]?`<em id="${n[2]==='runs'?'navRuns':''}">${n[2]==='runs'?'–':esc(n[2])}</em>`:''}</a>`).join('');
 document.querySelectorAll('.navlist a').forEach(a=>a.addEventListener('click',e=>e.preventDefault()));
 function bars(el,n,color,speed){el.innerHTML=Array.from({length:n},(_,i)=>`<i style="height:${6+((i*7)%18)}px;background:${color||'var(--glow)'};animation-duration:${speed||'1.2s'};animation-delay:${(-i*0.09).toFixed(2)}s"></i>`).join('')}
@@ -328,9 +341,9 @@ bars($('wave'),24);bars($('wave2'),8,null,'1s');bars($('wave3'),8,null,'1s');
 })();
 
 /* static: timeline + connections */
-const timeline=[['Sun 08:40','Morning review',C.glow,100],['Sun','Post 1 · AI focus',C.ok,90],['Sun','Warm contacts · Audit',C.warn,30],['This week','Qayd trainer search',C.warn,15],['10 Nov','n8n trial decision',C.bad,5]];
+const timeline=[['Sun 08:40','Morning review',C.glow,100],['Sun','Post 1 · AI focus',C.ok,90],['Sun','Warm contacts · Audit',C.warn,30],['This week','Qayd trainer search',C.warn,15],['9 Nov','n8n paid plan active',C.ok,100]];
 $('timeline').innerHTML=timeline.map(t=>`<div class="tl"><p class="when">${esc(t[0])}</p><span class="dot" style="background:${t[2]}"></span><div class="grow"><p class="t1" style="font-size:13px">${esc(t[1])}</p><div class="bar"><i style="width:${t[3]}%;background:${t[2]}"></i></div></div></div>`).join('');
-const conns=[['Claude Sonnet','Agents 6–8',C.ok],['Claude Haiku','Agents 1–5',C.ok],['n8n Cloud','Workflow live',C.ok],['Google Sheets','Run log',C.ok],['Google Drive','Connected',C.ok],['Gmail','Connected',C.ok],['Canva','Connected',C.ok],['WhatsApp','Not linked',C.warn]];
+const conns=[['Claude Sonnet','Agents 1, 7, 8',C.ok],['Claude Haiku','Agents 2–6',C.ok],['n8n Cloud','Workflow live',C.ok],['Google Sheets','Run log',C.ok],['Google Drive','Connected',C.ok],['Gmail','Connected',C.ok],['Canva','Connected',C.ok],['WhatsApp','Not linked',C.warn]];
 $('conns').innerHTML=conns.map(c=>`<div class="row"><span class="sq" style="border-color:${c[2]}"></span><div class="grow"><p class="t1" style="font-size:12px">${esc(c[0])}</p><p class="t2" style="color:${c[2]};font-size:10px">${esc(c[1])}</p></div></div>`).join('');
 
 /* clock (Kuwait) */
@@ -341,24 +354,41 @@ function tick(){const n=new Date();$('dateTxt').textContent=dFmt.format(n);$('ti
 tick();setInterval(tick,1000);
 
 /* ---------- agents model ---------- */
+/* core 8 run live in n8n; the Run Log still uses the old n8n numbers (old = new - 1, AI CEO was 8) */
 const AGENTS=[
-  {n:8,name:'CEO Review',icon:I.check,color:C.glow},{n:7,name:'Content',icon:I.pen,color:C.pink},
-  {n:6,name:'Business Dev',icon:I.hand,color:C.ok},{n:2,name:'Legal',icon:I.law,color:C.purple},
-  {n:3,name:'Finance',icon:I.coin,color:C.warn},{n:4,name:'Program',icon:I.book,color:C.orange},
-  {n:5,name:'Service',icon:I.box,color:C.mint},{n:1,name:'Structure',icon:I.layers,color:C.grey}];
+  {n:1,old:8,name:'AI CEO',icon:I.check,color:C.glow},{n:8,old:7,name:'Content & PR',icon:I.pen,color:C.pink},
+  {n:7,old:6,name:'Business Dev',icon:I.hand,color:C.ok},{n:3,old:2,name:'Legal',icon:I.law,color:C.purple},
+  {n:4,old:3,name:'Finance',icon:I.coin,color:C.warn},{n:5,old:4,name:'X10 Program',icon:I.book,color:C.orange},
+  {n:6,old:5,name:'RS Service',icon:I.box,color:C.mint},{n:2,old:1,name:'Structure',icon:I.layers,color:C.grey}];
+const GROUPS=[
+  {name:'Core',color:C.glow,list:[[1,'AI CEO'],[2,'Structure Architect'],[3,'Legal & Licensing'],[4,'Finance Planner'],[5,'X10 Program Designer'],[6,'RS Service Designer'],[7,'Business Development'],[8,'Content, Marketing & PR']]},
+  {name:'Management',color:C.purple,list:[[9,'Chief of Staff']]},
+  {name:'Consulting & Automation',color:C.ok,list:[[10,'AI Business Strategist'],[11,'Process Analyst'],[12,'Automation Architect'],[13,'Agent Developer'],[14,'Solutions Developer'],[15,'Systems Integration'],[16,'Implementation & QA']]},
+  {name:'Design Studio',color:C.orange,list:[[17,'Studio Director'],[18,'Concept Architect'],[19,'3D Modeller'],[20,'Renderer'],[21,'Technical Drafter'],[22,'BOQ & Cost Analyst'],[23,'Fabrication Specialist'],[24,'Event, Venue & Booth Architect'],[25,'Technical QA Reviewer']]},
+  {name:'Commercial',color:C.pink,list:[[26,'Proposals & Quotations']]},
+  {name:'Other assistants',color:C.grey,list:[['T','Tender Researcher'],['✈','Travel Agent']]}];
+let agView='core';
 const VERD={APPROVE:['Approved',C.ok,'READY'],FIX:['Needs fix',C.warn,'FIX'],REDO:['Redo',C.bad,'REDO']};
 let runs=[],latest=null;
 
 function renderAgents(){
   const v=latest?latest.agentVerdicts:{};
+  $('tabCore').classList.toggle('on',agView==='core');$('tabAll').classList.toggle('on',agView==='all');
+  $('agents').classList.toggle('all',agView==='all');$('agLegend').hidden=agView!=='all';$('agentNote').hidden=agView==='all';
+  if(agView==='all'){
+    $('agLegend').innerHTML=GROUPS.map(g=>`<span><i style="background:${g.color}"></i>${esc(g.name)}</span>`).join('');
+    $('agents').innerHTML=GROUPS.map(g=>g.list.map(([n,name])=>`<div class="mini" style="--c:${g.color}" title="${esc(g.name+' · '+name)}"><b>${esc(String(n))}</b><span>${esc(name)}</span></div>`).join('')).join('');
+    return;
+  }
   $('agents').innerHTML=AGENTS.map(a=>{
-    let st='Standby',sc=C.mute,sp='3s';
-    if(a.n===8&&latest&&latest.overall){st='Reviewed · '+latest.overall;sc=VERD[latest.overall][1];sp='0.9s'}
-    else if(v[a.n]){st=VERD[v[a.n].v][0];sc=VERD[v[a.n].v][1];sp='1.7s'}
+    let st='Standby',sc=C.mute,sp='3s';const o=a.old;
+    if(a.n===1&&latest&&latest.overall){st='Reviewed · '+latest.overall;sc=VERD[latest.overall][1];sp='0.9s'}
+    else if(v[o]){st=VERD[v[o].v][0];sc=VERD[v[o].v][1];sp='1.7s'}
     else if(!latest){st='Waiting for log';sp='3s'}
-    return `<button class="agent" data-n="${a.n}" title="${esc(v[a.n]?v[a.n].why:'')}"><span class="ico" style="background:${a.color}22;border:1px solid ${a.color}">${svg(a.icon,a.color)}</span><span class="grow"><span class="t1" style="display:block">${esc(a.name)}</span><span class="t2" style="display:block;color:${sc}">● ${esc(st)}</span></span><span class="bars">${Array.from({length:8},(_,i)=>`<i style="height:${[8,16,11,20,9,14,18,7][i]}px;background:${a.color};animation-duration:${sp};animation-delay:${(-i*.13).toFixed(2)}s"></i>`).join('')}</span></button>`}).join('');
+    return `<button class="agent" data-n="${a.n}" title="${esc(v[a.old]?v[a.old].why:'')}"><span class="ico" style="background:${a.color}22;border:1px solid ${a.color}">${svg(a.icon,a.color)}</span><span class="grow"><span class="t1" style="display:block">${a.n} · ${esc(a.name)}</span><span class="t2" style="display:block;color:${sc}">● ${esc(st)}</span></span><span class="bars">${Array.from({length:8},(_,i)=>`<i style="height:${[8,16,11,20,9,14,18,7][i]}px;background:${a.color};animation-duration:${sp};animation-delay:${(-i*.13).toFixed(2)}s"></i>`).join('')}</span></button>`}).join('');
   document.querySelectorAll('.agent').forEach(b=>b.onclick=()=>{if(latest)openRun(latest)});
 }
+$('tabCore').onclick=()=>{agView='core';renderAgents()};$('tabAll').onclick=()=>{agView='all';renderAgents()};
 
 function renderCore(){
   const n=runs.length,last=latest;
@@ -457,7 +487,7 @@ let detailText='';
 function openRun(r){
   if(!r)return;$('detail').hidden=false;
   $('detailTitle').textContent='RUN '+(r.date||'')+(r.overall?' · '+r.overall:'');
-  const lines=Object.keys(r.agentVerdicts).sort().map(k=>`Agent ${k}: ${r.agentVerdicts[k].v} — ${r.agentVerdicts[k].why}`).join('\n');
+  const lines=Object.keys(r.agentVerdicts).sort().map(k=>`Agent ${+k+1}: ${r.agentVerdicts[k].v} — ${r.agentVerdicts[k].why}`).join('\n');
   detailText=`REQUEST\n${r.request}\n\n${lines?'VERDICTS\n'+lines+'\n\n':''}${r.final?'FINAL ANSWER\n'+r.final:(r.ceo||'No CEO review on this run.')}`;
   $('detailBody').textContent=detailText;$('detailBody').dir=isAr(r.final)&&!/[A-Za-z]{20}/.test(r.final)?'rtl':'ltr';
 }
@@ -473,9 +503,16 @@ $('fsBtn').onclick=async()=>{try{if(document.fullscreenElement)await document.ex
 
 <script type="module">
 /* RAJU voice: direct call to the ElevenLabs agent, no pop-up */
-const AGENT = 'agent_1701m673wa1wf0xajmegzbcjdzez';
+
 const $ = id => document.getElementById(id);
 let conv = null, busy = false, state = 'idle';
+const AGENTS_V = {en:'agent_1701m673wa1wf0xajmegzbcjdzez', kw:'agent_5001m6ysrprxewhbme85cb2avxww'};
+let voice = 'kw'; try{ voice = localStorage.getItem('raju_voice') || 'kw'; }catch(e){}
+function setVoice(v){ if(conv) return; voice = v; try{ localStorage.setItem('raju_voice', v); }catch(e){}
+  document.getElementById('vEN').classList.toggle('on', v==='en'); document.getElementById('vKW').classList.toggle('on', v==='kw'); }
+setVoice(voice);
+document.getElementById('vEN').addEventListener('click', ()=>setVoice('en'));
+document.getElementById('vKW').addEventListener('click', ()=>setVoice('kw'));
 const LABEL = {idle:'Ready', connecting:'Connecting', listening:'Listening', speaking:'Speaking', error:'Problem'};
 function ui(st, msg){
   state = st; document.body.dataset.call = st;
@@ -520,7 +557,7 @@ async function start(type, retried){
   try{
     const { Conversation } = await lib();
     conv = await Conversation.startSession({
-      agentId: AGENT,
+      agentId: AGENTS_V[voice],
       connectionType: type,
       onConnect: () => ui('listening','Listening. Just speak. Tap to end'),
       onDisconnect: d => {
