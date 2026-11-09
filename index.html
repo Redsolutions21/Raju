@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="RAJU">
 <title>RAJU Command Center</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -196,6 +199,7 @@ body[data-call="error"] #askHint,body[data-call="error"] #talkSub{color:var(--wa
     <div class="wave" id="wave"></div>
     <p class="small" style="color:var(--ink-soft)">RAJU voice</p>
     <div class="vsw" role="group" aria-label="RAJU voice"><button type="button" id="vEN">EN</button><button type="button" id="vKW">كويتي</button></div>
+    <div class="vsw"><button type="button" id="tvBtn" aria-pressed="false">📺 TV mode</button></div>
     <button class="mic" id="micBtn" type="button" aria-label="Talk to RAJU"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EAF6FF" stroke-width="2" stroke-linecap="round"><path d="M12 3a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3zM5 11a7 7 0 0 0 14 0M12 18v3"/></svg></span></button>
     <p class="small" id="askHint" style="color:var(--ink-soft);text-align:center">Tap the mic to talk to RAJU</p>
     <button class="ghost" id="fsBtn" style="align-self:stretch;border-radius:14px">Full screen</button>
@@ -309,13 +313,19 @@ function fit(){
   const w=wrap.clientWidth;
   if(w<760){stage.classList.add('narrow');stage.style.transform='';wrap.style.height='auto';stage.style.left='0';return}
   stage.classList.remove('narrow');
-  const avail=Math.max(400,window.innerHeight-20);
-  const s=Math.min(w/1440,avail/900);
+  const full=!!(document.fullscreenElement||document.webkitFullscreenElement||navigator.standalone||matchMedia('(display-mode: standalone)').matches||document.body.classList.contains('tv'));
+  document.documentElement.style.overflow=full?'hidden':'';
+  const W=wrap.clientWidth; if(W!==w) return fit();
+  const pad=Math.max(0,wrap.getBoundingClientRect().top+window.scrollY);
+  const avail=Math.max(400,window.innerHeight-(full?pad*2:20));
+  let H=900,s=Math.min(w/1440,avail/900);
+  if(full){s=w/1440;H=Math.max(900,Math.round(avail/s))}
+  stage.style.height=H+'px';
   stage.style.transform='scale('+s+')';
   stage.style.left=Math.max(0,(w-1440*s)/2)+'px';
-  wrap.style.height=(900*s)+'px';
+  wrap.style.height=(H*s)+'px';
 }
-window.addEventListener('resize',fit);fit();
+window.fit=fit;window.addEventListener('resize',fit);document.addEventListener('fullscreenchange',fit);document.addEventListener('webkitfullscreenchange',fit);fit();
 
 /* ---------- static decor ---------- */
 const navItems=[['Command Center',I.grid,''],['AI Core',I.core,''],['Agents',I.bot,'26'],['Runs',I.play,'runs'],['Calendar',I.cal,''],['Run Log',I.db,''],['Requests',I.chat,''],['Knowledge Base',I.book,''],['Tools & Skills',I.tool,'4'],['Workflows',I.flow,'']];
@@ -495,7 +505,7 @@ $('detailClose').onclick=()=>$('detail').hidden=true;
 $('cmdLatest').onclick=()=>{if(latest)openRun(latest)};
 
 /* full screen + keep awake */
-$('fsBtn').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen()}catch(e){$('fsBtn').textContent='Use the browser’s full screen'}
+$('fsBtn').onclick=async()=>{const d=document,el=d.documentElement;try{if(d.fullscreenElement||d.webkitFullscreenElement){await (d.exitFullscreen||d.webkitExitFullscreen).call(d)}else if(el.requestFullscreen){await el.requestFullscreen()}else if(el.webkitRequestFullscreen){el.webkitRequestFullscreen()}else throw 0}catch(e){$('fsBtn').textContent='Share → Add to Home Screen'}setTimeout(fit,300)
   try{if('wakeLock' in navigator)await navigator.wakeLock.request('screen')}catch(e){}};
 })();
 </script>
@@ -513,6 +523,26 @@ function setVoice(v){ if(conv) return; voice = v; try{ localStorage.setItem('raj
 setVoice(voice);
 document.getElementById('vEN').addEventListener('click', ()=>setVoice('en'));
 document.getElementById('vKW').addEventListener('click', ()=>setVoice('kw'));
+/* TV mode: mic off while RAJU talks (TV speakers echo), and keep the screen awake during a call */
+let tv=false; try{tv=localStorage.getItem('raju_tv')==='1'}catch(e){}
+let unmuteT=null, wl=null;
+function setTV(v){ tv=v; try{localStorage.setItem('raju_tv', v?'1':'0')}catch(e){}
+  const b=document.getElementById('tvBtn'); b.classList.toggle('on', v); b.setAttribute('aria-pressed', v);
+  document.body.classList.toggle('tv', v); if(window.fit) window.fit();
+  if(conv && !v){ clearTimeout(unmuteT); try{conv.setMicMuted(false)}catch(e){} } }
+document.getElementById('tvBtn').addEventListener('click', ()=>setTV(!tv));
+setTV(tv);
+function tvMode(mode){
+  if(!tv || !conv) return;
+  clearTimeout(unmuteT);
+  if(mode==='speaking'){ try{conv.setMicMuted(true)}catch(e){} }
+  else unmuteT=setTimeout(()=>{ try{conv && conv.setMicMuted(false)}catch(e){} }, 1500); // wait for the TV's sound delay
+}
+async function wake(on){
+  try{ if(on){ if('wakeLock' in navigator && !wl){ wl=await navigator.wakeLock.request('screen'); wl.addEventListener('release',()=>{wl=null}); } }
+       else if(wl){ await wl.release(); wl=null; } }catch(e){}
+}
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible' && conv) wake(true); });
 const LABEL = {idle:'Ready', connecting:'Connecting', listening:'Listening', speaking:'Speaking', error:'Problem'};
 function ui(st, msg){
   state = st; document.body.dataset.call = st;
@@ -534,7 +564,7 @@ async function toggle(){
   if(conv){
     busy = true; userEnded = true; ui('connecting','Ending call…');
     try{ await conv.endSession(); }catch(e){}
-    conv = null; busy = false; ui('idle','Call ended. Tap to talk again'); return;
+    conv = null; wake(false); busy = false; ui('idle','Call ended. Tap to talk again'); return;
   }
   busy = true; unlockAudio(); ui('connecting','Allow the microphone…');
   try{
@@ -559,15 +589,15 @@ async function start(type, retried){
     conv = await Conversation.startSession({
       agentId: AGENTS_V[voice],
       connectionType: type,
-      onConnect: () => ui('listening','Listening. Just speak. Tap to end'),
+      onConnect: () => { ui('listening','Listening. Just speak. Tap to end'); wake(true); },
       onDisconnect: d => {
-        conv = null; if(userEnded) return;
+        conv = null; wake(false); if(userEnded) return;
         const quick = Date.now() - t0 < 8000;
         if(quick && !retried && type === 'webrtc'){ start('websocket', true); return; }
         ui('error','Call dropped: ' + why(d) + (retried ? ' (both ways)' : ''));
       },
       onError: e => ui('error','RAJU error: ' + msgOf(e)),
-      onModeChange: ({mode}) => mode === 'speaking' ? ui('speaking','RAJU is speaking. Tap to end') : ui('listening','Listening. Just speak. Tap to end')
+      onModeChange: ({mode}) => { tvMode(mode); mode === 'speaking' ? ui('speaking', tv ? 'RAJU is speaking · mic off (TV mode)' : 'RAJU is speaking. Tap to end') : ui('listening','Listening. Just speak. Tap to end'); }
     });
   }catch(e){
     conv = null;
